@@ -25,6 +25,7 @@ var getRealTimePrice = (stockNum) =>{
 var  getStockMaster = (stockCode)=>{
     return new Promise((resolve, reject) => {
         try {
+            console.log(stockCode);
             var url = 'http://www.dbpower.com.hk/ch/quote/quote-stock/code/';
             var selector = ['.quote','.cp_title h2','.change span'];
             url = url + stockCode;

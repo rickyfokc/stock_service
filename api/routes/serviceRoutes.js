@@ -4,6 +4,7 @@ module.exports = function(app) {
   let stockService = require('../controllers/serviceController');
   let express = require('express');
   let StockMaster = require('../models/stockMaster');
+  var PromisePool = require('es6-promise-pool')
   var Item = require('../models/item');
 
   // // Service Price Routes
@@ -25,28 +26,18 @@ module.exports = function(app) {
         console.log('save to mongo');
         var stockMaster = new StockMaster({
           stockCode: req.params.stockNum,
-          stockMarketPrice: data.np
+          stockMarketPrice: data.np,
+          created_at: new Date(),
         });
         return stockMaster.save();
       })
       .then((data)=>{
         res.send(data);
+      })
+      .catch((err) =>{
+        res.send(err);
       });
     });
-
-
-  app.get('/', function (req, res) {
-    res.send('Hello World!@');
-  });
-
-  app.route('/a')
-  .get((req, res)=>{
-    console.log('get master');
-    stockService.getStockMaster('00000')
-    .then(data => {
-      res.send(data);
-    });
-  });
 
   app.route('/b')
   .get((req, res)=>{
@@ -62,8 +53,30 @@ module.exports = function(app) {
       return Promise.all(promiseArr);
     })
     .then(data => {
+      //res.send(data);
+      var stockMaster = new StockMaster({
+        stockCode: data[0][1].substring(0, 5),
+        stockMarketPrice: data[0][0],
+        stockChiName: data[0][1].substring(6),
+        created_at: new Date(),
+      });
+      return stockMaster.save();
+    })
+    .then(data => {
+      console.log(data);
       res.send(data);
-    });
+    })
+    .catch((err) =>{
+      res.send(err);
+    })
+    ;
+  });
+
+  app.get('/', function (req, res) {
+
+     res.send('Complete');
+    
   });
 
 };
+
