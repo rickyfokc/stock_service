@@ -1,7 +1,7 @@
 'use strict';
 
 var request = require("request");
-var stockNum;
+var scrapy = require('node-scrapy');
 
 var getRealTimePrice = (stockNum) =>{
     return new Promise((resolve, reject) => {
@@ -19,6 +19,44 @@ var getRealTimePrice = (stockNum) =>{
         });
     });
 };
+
+
+
+var  getStockMaster = (stockCode)=>{
+    return new Promise((resolve, reject) => {
+        try {
+            var url = 'http://www.dbpower.com.hk/ch/quote/quote-stock/code/';
+            var selector = ['.quote','.cp_title h2','.change span'];
+            url = url + stockCode;
+            scrapy.scrape(url, selector, function(err, data) {
+                if (err) reject(err);
+                resolve(data);
+            });
+        } catch(e) {
+            reject(e);
+        }
+    });
+};
+
+var getArrList = () => {
+    return new Promise((resolve, reject) => {
+        try {
+            let A = [];
+            for (var i = 1; i < 10; i ++){
+                if (i <10) A.push("0000"+i);
+                else if (i <100) A.push("000"+i);
+                else if (i <1000) A.push("00"+i);
+                else if (i <10000) A.push("0"+i);
+            }
+            resolve(A);
+        } catch(e) {
+            reject(e);
+        }
+    });
+};
+
 module.exports = {
-    getRealTimePrice: getRealTimePrice
+    getRealTimePrice,
+    getStockMaster,
+    getArrList
 };

@@ -34,26 +34,36 @@ module.exports = function(app) {
       });
     });
 
-  app.route('/item')
-    .get(function (request, response) {
-
-      console.log('POST /items');
-
-    var item = new Item({
-      "id": "1",
-      "name": "React.js Essentials",
-      "description": "A fast-paced guide to designing and building scalable and maintainable web apps with React.js.",
-      "quantity": "10"
-    });
-
-    item.save();
-
-    response.status(201).send(item);
-  });
 
   app.get('/', function (req, res) {
     res.send('Hello World!@');
   });
 
+  app.route('/a')
+  .get((req, res)=>{
+    console.log('get master');
+    stockService.getStockMaster('00000')
+    .then(data => {
+      res.send(data);
+    });
+  });
+
+  app.route('/b')
+  .get((req, res)=>{
+    console.log('getArrList');
+    stockService.getArrList()
+    .then(data => {
+      let promiseArr = [];
+      for( let i = 0; i < data.length; i ++){
+        promiseArr.push(stockService.getStockMaster(data[i]));
+      }
+      console.log(promiseArr);
+      
+      return Promise.all(promiseArr);
+    })
+    .then(data => {
+      res.send(data);
+    });
+  });
 
 };
