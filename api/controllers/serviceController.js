@@ -2,6 +2,7 @@
 
 var request = require("request");
 var scrapy = require('node-scrapy');
+var StockMaster = require('../models/stockMaster');
 
 var getRealTimePrice = (stockNum) =>{
     return new Promise((resolve, reject) => {
@@ -25,7 +26,6 @@ var getRealTimePrice = (stockNum) =>{
 var  getStockMaster = (stockCode)=>{
     return new Promise((resolve, reject) => {
         try {
-            console.log(stockCode);
             var url = 'http://www.dbpower.com.hk/ch/quote/quote-stock/code/';
             var selector = ['.quote','.cp_title h2','.change span'];
             url = url + stockCode;
@@ -43,7 +43,7 @@ var getArrList = () => {
     return new Promise((resolve, reject) => {
         try {
             let A = [];
-            for (var i = 1; i < 10; i ++){
+            for (var i = 0; i < 60; i ++){
                 if (i <10) A.push("0000"+i);
                 else if (i <100) A.push("000"+i);
                 else if (i <1000) A.push("00"+i);
@@ -56,8 +56,65 @@ var getArrList = () => {
     });
 };
 
+var getStockMasterBatch = (batchArray) => {
+    let promiseArr = [];
+      for( let i = 0; i < batchArray.length; i ++){
+        promiseArr.push(getStockMaster(batchArray[i]));
+      }
+      console.log('getStockMasterBatch length:' + promiseArr.length);
+      
+      return recurrMasterBatch (null,promiseArr,0 );
+      //return Promise.all(promiseArr);
+};
+
+var recurrMasterBatch = (data,promiseArr,count ) => {
+    count = count ||0;
+    console.log(count);
+    var l_count = count;
+    var l_data = data||[];
+    if (count === promiseArr.length){
+        return data;
+    }
+    let tempArr = [];
+    for(var i = count; i< count+10 ; i ++){
+        tempArr.push(promiseArr[i]);
+        l_count ++;
+    }
+
+    return Promise.all(tempArr)
+            .then(result =>{
+               return l_data.concat(result);
+                
+            })
+            .then(result =>{
+                return recurrMasterBatch(result,promiseArr,l_count);
+            });
+
+};
+
+var insertStockMasterBatch = (batchStockData) =>{
+    let promiseArr = [];
+    console.log('batchStockData length:' + batchStockData.length);
+      for (var i = 0; i < batchStockData.length; i++){
+        if (batchStockData[i][0] !== null){
+            console.log(batchStockData[i][1].substring(0, 5)+"|"+batchStockData[i][0]+"|"+batchStockData[i][1].substring(6));
+            // let stockMaster = new StockMaster({
+            //     stockCode: batchStockData[i][1].substring(0, 5),
+            //     stockMarketPrice: batchStockData[i][0],
+            //     stockChiName: batchStockData[i][1].substring(6),
+            //     created_at: new Date(),
+            //   });
+            //   promiseArr.push(stockMaster.save());
+        }
+      }
+      console.log(promiseArr.length);
+      return Promise.all(promiseArr);
+};
+
 module.exports = {
     getRealTimePrice,
     getStockMaster,
-    getArrList
+    getArrList,
+    getStockMasterBatch,
+    insertStockMasterBatch
 };

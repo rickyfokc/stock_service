@@ -41,29 +41,15 @@ module.exports = function(app) {
 
   app.route('/b')
   .get((req, res)=>{
-    console.log('getArrList');
     stockService.getArrList()
     .then(data => {
-      let promiseArr = [];
-      for( let i = 0; i < data.length; i ++){
-        promiseArr.push(stockService.getStockMaster(data[i]));
-      }
-      console.log(promiseArr);
-      
-      return Promise.all(promiseArr);
+      return stockService.getStockMasterBatch(data);
     })
     .then(data => {
-      //res.send(data);
-      var stockMaster = new StockMaster({
-        stockCode: data[0][1].substring(0, 5),
-        stockMarketPrice: data[0][0],
-        stockChiName: data[0][1].substring(6),
-        created_at: new Date(),
-      });
-      return stockMaster.save();
+      return stockService.insertStockMasterBatch(data);
     })
     .then(data => {
-      console.log(data);
+      console.log(data.length);
       res.send(data);
     })
     .catch((err) =>{
@@ -79,4 +65,5 @@ module.exports = function(app) {
   });
 
 };
+
 
