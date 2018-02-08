@@ -89,6 +89,7 @@ var recurrMasterBatch = (data,promiseArr,count ) => {
             .then(result =>{
                 return recurrMasterBatch(result,promiseArr,l_count);
             });
+            
 
 };
 
